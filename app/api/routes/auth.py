@@ -4,6 +4,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.database.db import SessionLocal, Base, engine
 from app.schemas import user
 from app.schemas.user import UserCreate, UserRead
+from app.core.dependencies import get_db
 from app.crud.user import create_user, get_user_by_username
 from app.core.security import hash_password, verify_password, create_access_token
 
@@ -13,12 +14,12 @@ router = APIRouter(
 )
 
 # DB session dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+#def get_db():
+#    db = SessionLocal()
+#    try:
+#        yield db
+#    finally:
+#        db.close()
 
 
 # -------------------
@@ -29,8 +30,6 @@ def signup(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = get_user_by_username(db, user.username)
     if existing_user:
         raise HTTPException(status_code=400, detail="Username already exists")
-    print("PASSWORD CHARS:", len(user.password))
-    print("PASSWORD BYTES:", len(user.password.encode("utf-8")))
     return create_user(db=db, user=user)
 
 

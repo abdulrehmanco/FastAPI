@@ -85,7 +85,9 @@ def read_blog(blog_id: int, db: Session = Depends(get_db)):
 @router.put("/{blog_id}", response_model=BlogRead)
 def update_blog(
     blog_id: int,
-    blog: BlogUpdate,
+    title: str = Form(...),
+    content: str = Form(...),
+    image: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -94,10 +96,23 @@ def update_blog(
     if not db_blog or db_blog.author_id != current_user.id:
         raise HTTPException(403, "Not allowed")
 
-    if blog.title:
-        db_blog.title = blog.title
-    if blog.content:
-        db_blog.content = blog.content
+    db_blog.title = title
+    db_blog.content = content
+
+    # Update image if provided
+    if image:
+        if not image.content_type.startswith("image/"):
+            raise HTTPException(400, "File must be an image")
+
+        ext = image.filename.split(".")[-1]
+        filename = f"{uuid4()}.{ext}"
+
+        file_path = os.path.join(UPLOAD_DIR, filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+        image_url = f"media/blog_images/{filename}"
+        db_blog.image = image_url
 
     db.commit()
     db.refresh(db_blog)

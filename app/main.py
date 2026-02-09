@@ -10,7 +10,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-<<<<<<< HEAD
+
 # Create tables
 Base.metadata.create_all(bind=engine)
 origins = [
@@ -30,9 +30,9 @@ app.add_middleware(
 app.mount("/media", StaticFiles(directory="app/media"), name="media")
 
 
-=======
+
 # Include our blog router
->>>>>>> c0aa4f69740f8b89993006f803d23529525758b5
+
 app.include_router(blog.router)
 app.include_router(auth.router)
 app.include_router(user.router)
