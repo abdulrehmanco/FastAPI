@@ -1,8 +1,7 @@
-# app/core/security.py
-
 from datetime import datetime, timedelta
 from jose import jwt
 from passlib.context import CryptContext
+import hashlib
 
 # ---------------------------
 # Password hashing
@@ -10,22 +9,28 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
-    deprecated="auto"
+    deprecated="auto",
+    bcrypt__rounds=12
 )
 
 def hash_password(password: str) -> str:
     """
     Hash a password safely.
-    bcrypt has a 72-byte limit, so we truncate to avoid runtime errors.
+    For bcrypt compatibility, we first hash long passwords with SHA256,
+    then use bcrypt on the result.
     """
-    password = password[:72]
+    # If password is longer than 72 bytes, hash it first with SHA256
+    if len(password.encode('utf-8')) > 72:
+        password = hashlib.sha256(password.encode('utf-8')).hexdigest()
     return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
     Verify a plain password against its hash.
     """
-    plain_password = plain_password[:72]
+    # If password is longer than 72 bytes, hash it first with SHA256
+    if len(plain_password.encode('utf-8')) > 72:
+        plain_password = hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
     return pwd_context.verify(plain_password, hashed_password)
 
 # ---------------------------

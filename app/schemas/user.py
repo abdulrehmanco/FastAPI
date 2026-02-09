@@ -18,4 +18,4 @@ class UserRead(BaseModel):
 class UserUpdate(BaseModel):
     username: str | None = None
     email: EmailStr | None = None
-    password: str | None = None
+    password: Annotated[str, constr(min_length=6, max_length=72)] | None = None

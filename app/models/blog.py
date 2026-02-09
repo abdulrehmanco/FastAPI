@@ -11,6 +11,7 @@ class Blog(Base):
     author_id = Column(Integer, ForeignKey("users.id"))
     comments = relationship("Comment", back_populates="blog", cascade="all, delete")
     likes = relationship("Like", back_populates="blog", cascade="all, delete")
+    image = Column(String, nullable=True)
 
     # Relationship to User
     author = relationship("User")

@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import List
+import shutil, os
+from uuid import uuid4
 
-from app.schemas.blog import BlogCreate, BlogRead, BlogUpdate
-from app.crud.blog import create_blog, get_blog, get_blogs, update_blog, delete_blog
-from app.database.db import Base, engine, SessionLocal
+from app.database.db import Base, engine
 from app.core.dependencies import get_db, get_current_user
 from app.models.user import User
+from app.models.blog import Blog
+from app.schemas.blog import BlogRead, BlogUpdate
 
-# Create tables (dev only)
 Base.metadata.create_all(bind=engine)
 
 router = APIRouter(
@@ -16,58 +17,107 @@ router = APIRouter(
     tags=["Blogs"]
 )
 
+UPLOAD_DIR = "app/media/blog_images"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# -----------------
-# Blog Routes
-# -----------------
-
-# Create blog (protected)
+# ------------------------
+# CREATE BLOG (WITH IMAGE)
+# ------------------------
 @router.post("/", response_model=BlogRead)
-def create_blog_endpoint(
-    blog: BlogCreate,
+def create_blog(
+    title: str = Form(...),
+    content: str = Form(...),
+    image: UploadFile | None = File(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    return create_blog(db=db, blog=blog, user_id=current_user.id)
+    image_url = None
+
+    if image:
+        if not image.content_type.startswith("image/"):
+            raise HTTPException(400, "File must be an image")
+
+        ext = image.filename.split(".")[-1]
+        filename = f"{uuid4()}.{ext}"
+
+        file_path = os.path.join(UPLOAD_DIR, filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(image.file, buffer)
+
+        # 🔑 THIS is what frontend uses
+        image_url = f"media/blog_images/{filename}"
+
+    blog = Blog(
+        title=title,
+        content=content,
+        author_id=current_user.id,
+        image=image_url
+    )
+
+    db.add(blog)
+    db.commit()
+    db.refresh(blog)
+    return blog
 
 
-# Read all blogs (public)
+# ------------------------
+# READ ALL BLOGS
+# ------------------------
 @router.get("/", response_model=List[BlogRead])
-def read_blogs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    return get_blogs(db=db, skip=skip, limit=limit)
+def read_blogs(db: Session = Depends(get_db)):
+    return db.query(Blog).all()
 
 
-# Read single blog (public)
+# ------------------------
+# READ SINGLE BLOG
+# ------------------------
 @router.get("/{blog_id}", response_model=BlogRead)
 def read_blog(blog_id: int, db: Session = Depends(get_db)):
-    db_blog = get_blog(db=db, blog_id=blog_id)
-    if not db_blog:
-        raise HTTPException(status_code=404, detail="Blog not found")
-    return db_blog
+    blog = db.query(Blog).filter(Blog.id == blog_id).first()
+    if not blog:
+        raise HTTPException(404, "Blog not found")
+    return blog
 
 
-# Update blog (protected, only author)
+# ------------------------
+# UPDATE BLOG
+# ------------------------
 @router.put("/{blog_id}", response_model=BlogRead)
-def update_blog_endpoint(
+def update_blog(
     blog_id: int,
     blog: BlogUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_blog = update_blog(db=db, blog_id=blog_id, blog=blog, user_id=current_user.id)
-    if not db_blog:
-        raise HTTPException(status_code=403, detail="Not authorized to update this blog")
+    db_blog = db.query(Blog).filter(Blog.id == blog_id).first()
+
+    if not db_blog or db_blog.author_id != current_user.id:
+        raise HTTPException(403, "Not allowed")
+
+    if blog.title:
+        db_blog.title = blog.title
+    if blog.content:
+        db_blog.content = blog.content
+
+    db.commit()
+    db.refresh(db_blog)
     return db_blog
 
 
-# Delete blog (protected, only author)
+# ------------------------
+# DELETE BLOG
+# ------------------------
 @router.delete("/{blog_id}", response_model=BlogRead)
-def delete_blog_endpoint(
+def delete_blog(
     blog_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    db_blog = delete_blog(db=db, blog_id=blog_id, user_id=current_user.id)
-    if not db_blog:
-        raise HTTPException(status_code=403, detail="Not authorized to delete this blog")
-    return db_blog
+    blog = db.query(Blog).filter(Blog.id == blog_id).first()
+
+    if not blog or blog.author_id != current_user.id:
+        raise HTTPException(403, "Not allowed")
+
+    db.delete(blog)
+    db.commit()
+    return blog

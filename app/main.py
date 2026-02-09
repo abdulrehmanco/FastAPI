@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from app.api.routes import blog, auth, user, comment, like, reply
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from app.database.db import Base, engine
 
 app = FastAPI(
     title="Blog App",
@@ -8,8 +10,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Include our blog router
-#This is a testing comment
+# Create tables
+Base.metadata.create_all(bind=engine)
+origins = [
+    "http://localhost:5173",   # React (Vite)
+    "http://127.0.0.1:5173",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],   # GET, POST, PUT, DELETE, PATCH
+    allow_headers=["*"],   # Authorization, Content-Type
+)
+
+
+app.mount("/media", StaticFiles(directory="app/media"), name="media")
+
+
 app.include_router(blog.router)
 app.include_router(auth.router)
 app.include_router(user.router)
