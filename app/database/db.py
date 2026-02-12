@@ -1,11 +1,10 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "sqlite:///./blog.db"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:1234567@localhost:5432/fastapi_db"
 
 engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}  # needed for SQLite
+    SQLALCHEMY_DATABASE_URL,
 )
 
 SessionLocal = sessionmaker(
