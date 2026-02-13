@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from typing import List
 import shutil, os
 from uuid import uuid4
-
 from app.database.db import Base, engine
 from app.core.dependencies import get_db, get_current_user
 from app.models.user import User
@@ -66,6 +65,7 @@ def create_blog(
 @router.get("/", response_model=List[BlogRead])
 def read_blogs(db: Session = Depends(get_db)):
     return db.query(Blog).all()
+
 
 
 # ------------------------

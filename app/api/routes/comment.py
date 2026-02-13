@@ -1,6 +1,8 @@
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from app.models.user import User
+from ...core.dependencies import get_db, get_current_user
 
 from app.schemas.comment import CommentCreate, CommentRead, CommentUpdate
 from app.crud.comment import (
@@ -10,8 +12,6 @@ from app.crud.comment import (
     update_comment,
     delete_comment
 )
-from ...core.dependencies import get_db, get_current_user
-from app.models.user import User
 
 
 
@@ -38,6 +38,7 @@ def add_comment(
 @router.get("/", response_model=List[CommentRead])
 def read_comments(blog_id: int, db: Session = Depends(get_db)):
     return get_comments_for_blog(db=db, blog_id=blog_id)
+
 
 @router.put("/{comment_id}", response_model=CommentRead)
 def edit_comment(
