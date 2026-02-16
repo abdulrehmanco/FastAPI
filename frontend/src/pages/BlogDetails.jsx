@@ -57,7 +57,7 @@ export default function BlogDetails() {
           <h1>{blog.title}</h1>
           {blog.image && (
             <img
-              src={`http://127.0.0.1:8000/${blog.image}`}
+              src={`http://localhost:8000/${blog.image}`}
               alt={blog.title}
               style={{ width: "100%", marginBottom: "20px" }}
             />

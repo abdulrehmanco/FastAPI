@@ -8,6 +8,7 @@ class ReplyRead(BaseModel):
     content: str
     user_id: int
     comment_id: int
+    username: str | None = None
 
     class Config:
         from_attributes = True

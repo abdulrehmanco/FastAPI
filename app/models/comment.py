@@ -17,3 +17,9 @@ class Comment(Base):
     owner = relationship("User", back_populates="comments")
     blog = relationship("Blog", back_populates="comments")
     replies = relationship("Reply", back_populates="comment", cascade="all, delete")
+
+    @property
+    def username(self):
+        return self.owner.username if self.owner else None
+
+

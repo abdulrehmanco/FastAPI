@@ -17,6 +17,7 @@ class CommentRead(CommentBase):
     id: int
     user_id: int
     blog_id: int
+    username: str | None = None
 
     class Config:
         from_attributes = True

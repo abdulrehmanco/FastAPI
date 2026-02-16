@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../../api/axios";
 
-export default function ReplyList({ commentId }) {
+export default function ReplyList({ commentId, refreshTrigger }) {
   const [replies, setReplies] = useState([]);
 
   useEffect(() => {
@@ -14,14 +14,16 @@ export default function ReplyList({ commentId }) {
       }
     };
     fetchReplies();
-  }, [commentId]);
+  }, [commentId, refreshTrigger]);
 
   if (!replies.length) return null;
 
   return (
-    <div style={{ marginLeft: "20px", marginTop: "5px" }}>
+    <div style={{ marginLeft: "20px", marginTop: "5px", paddingLeft: "10px", borderLeft: "3px solid #e5e7eb" }}>
       {replies.map((r) => (
-        <p key={r.id}><b>User {r.user_id}</b>: {r.content}</p>
+        <p key={r.id} style={{ margin: "5px 0" }}>
+          <b>{r.username || `User ${r.user_id}`}</b>: {r.content}
+        </p>
       ))}
     </div>
   );

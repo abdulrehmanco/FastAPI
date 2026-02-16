@@ -14,3 +14,7 @@ class Reply(Base):
     # Relationships
     user = relationship("User", back_populates="replies")
     comment = relationship("Comment", back_populates="replies")
+
+    @property
+    def username(self):
+        return self.user.username if self.user else None

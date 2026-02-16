@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import api from "../api/axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { AuthContext } from "../auth/AuthContext";
+import "../styles.css";
 
 export default function EditBlog() {
   const { id } = useParams();
@@ -15,14 +16,12 @@ export default function EditBlog() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
 
-  // Fetch the blog data to edit
   useEffect(() => {
     const fetchBlog = async () => {
       try {
         const res = await api.get(`/blogs/${id}`);
         const blog = res.data;
 
-        // Check if user is the author
         if (user && blog.author_id !== user.id) {
           setError("You can only edit your own blogs");
           setTimeout(() => navigate("/"), 2000);
@@ -74,105 +73,74 @@ export default function EditBlog() {
     }
   };
 
-  if (loading) return <p style={{ textAlign: "center", marginTop: "50px" }}>Loading...</p>;
-
-  if (error)
-    return (
-      <p style={{ textAlign: "center", color: "red", marginTop: "50px" }}>
-        {error}
-      </p>
-    );
+  if (loading) return <p className="loading-text">Loading...</p>;
+  if (error) return <p className="error-message">{error}</p>;
 
   return (
-    <div
-      style={{
-        maxWidth: "600px",
-        margin: "50px auto",
-        padding: "20px",
-        backgroundColor: "#f8fafc",
-        borderRadius: "10px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      }}
-    >
-      <h2 style={{ marginBottom: "20px", color: "#1e293b" }}>Edit Blog</h2>
+    <div className="form-container">
+      <h2 className="form-title">✏️ Edit Blog</h2>
       <form onSubmit={submit}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "15px",
-            borderRadius: "6px",
-            border: "1px solid #cbd5e1",
-            boxSizing: "border-box",
-          }}
-          required
-        />
+        <div className="form-group">
+          <label className="form-label">Title</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Update blog title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            required
+          />
+        </div>
 
-        <textarea
-          placeholder="Content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "10px",
-            marginBottom: "15px",
-            borderRadius: "6px",
-            border: "1px solid #cbd5e1",
-            minHeight: "150px",
-            resize: "vertical",
-            boxSizing: "border-box",
-          }}
-          required
-        />
+        <div className="form-group">
+          <label className="form-label">Content</label>
+          <textarea
+            className="form-textarea"
+            placeholder="Update your blog content..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            required
+          />
+        </div>
 
-        {/* Current Image Display */}
         {currentImage && (
-          <div style={{ marginBottom: "15px" }}>
-            <p style={{ marginBottom: "10px", fontSize: "0.9rem", color: "#555" }}>
-              Current Image:
-            </p>
+          <div className="form-group">
+            <label className="form-label">Current Image</label>
             <img
-              src={`http://127.0.0.1:8000/${currentImage}`}
-              alt="Current blog image"
+              src={`http://localhost:8000/${currentImage}`}
+              alt="Current blog"
               style={{
                 width: "100%",
                 maxHeight: "200px",
                 objectFit: "cover",
-                borderRadius: "6px",
-                marginBottom: "10px",
+                borderRadius: "8px",
+                marginBottom: "15px",
               }}
             />
           </div>
         )}
 
-        {/* Image Upload */}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setImage(e.target.files[0])}
-          style={{ marginBottom: "20px" }}
-        />
+        <div className="form-group">
+          <label className="form-label">Change Image (Optional)</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setImage(e.target.files[0])}
+            style={{
+              padding: "12px",
+              border: "1px solid rgba(100, 108, 255, 0.15)",
+              borderRadius: "8px",
+              background: "rgba(100, 108, 255, 0.05)",
+              color: "rgba(255, 255, 255, 0.7)",
+              cursor: "pointer",
+            }}
+          />
+        </div>
 
         <button
           type="submit"
+          className="form-submit"
           disabled={submitting}
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: "#3b82f6",
-            color: "white",
-            fontWeight: "bold",
-            border: "none",
-            borderRadius: "6px",
-            cursor: submitting ? "not-allowed" : "pointer",
-            opacity: submitting ? 0.6 : 1,
-            fontSize: "16px",
-          }}
         >
           {submitting ? "Updating..." : "Update Blog"}
         </button>

@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { AuthContext } from "../auth/AuthContext";
+import "../styles.css";
 
 export default function Blogs() {
   const [blogs, setBlogs] = useState([]);
@@ -16,7 +17,7 @@ export default function Blogs() {
   }, []);
 
   const handleDelete = async (blogId, e) => {
-    e.stopPropagation(); // Prevent navigation when clicking delete
+    e.stopPropagation();
 
     if (!window.confirm("Are you sure you want to delete this blog?")) {
       return;
@@ -36,96 +37,57 @@ export default function Blogs() {
   };
 
   const handleEditClick = (blogId, e) => {
-    e.stopPropagation(); // Prevent navigation to blog details
+    e.stopPropagation();
     navigate(`/edit-blog/${blogId}`);
   };
 
   return (
-    <div style={{ maxWidth: "800px", margin: "auto", padding: "20px" }}>
-      <h2>All Blogs</h2>
-      {blogs.map((b) => {
-        const isAuthor = user && b.author_id === user.id;
-        return (
-          <div
-            key={b.id}
-            style={{
-              display: "flex",
-              gap: "10px",
-              alignItems: "center",
-              marginBottom: "15px",
-              padding: "10px",
-              border: "1px solid #ddd",
-              borderRadius: "5px",
-              cursor: "pointer",
-            }}
-          >
-            {/* Thumbnail */}
-            {b.image && (
-              <img
-                src={`http://localhost:8000/${b.image}`}
-                alt={b.title}
-                style={{ width: "100px", height: "70px", objectFit: "cover" }}
-                onClick={() => navigate(`/blogs/${b.id}`)}
-              />
-            )}
-
-            {/* Blog Content */}
+    <div className="blogs-container">
+      <h2 className="blogs-header">📚 All Blogs</h2>
+      <div className="blogs-list">
+        {blogs.map((b) => {
+          const isAuthor = user && b.author_id === user.id;
+          return (
             <div
-              style={{ flex: 1, cursor: "pointer" }}
+              key={b.id}
+              className="blog-card"
               onClick={() => navigate(`/blogs/${b.id}`)}
             >
-              <h3>{b.title}</h3>
-              <p style={{ fontSize: "0.9rem", color: "#555" }}>
-                {b.content.length > 100 ? b.content.slice(0, 100) + "..." : b.content}
-              </p>
-            </div>
+              {b.image && (
+                <img
+                  src={`http://localhost:8000/${b.image}`}
+                  alt={b.title}
+                  className="blog-card-image"
+                />
+              )}
 
-            {/* Edit & Delete Buttons - Only for Author */}
-            {isAuthor && (
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  flexDirection: "row",
-                }}
-              >
-                <button
-                  onClick={(e) => handleEditClick(b.id, e)}
-                  style={{
-                    padding: "8px 12px",
-                    backgroundColor: "#3b82f6",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                    fontWeight: "bold",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={(e) => handleDelete(b.id, e)}
-                  disabled={deletingId === b.id}
-                  style={{
-                    padding: "8px 12px",
-                    backgroundColor: "#dc2626",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: deletingId === b.id ? "not-allowed" : "pointer",
-                    fontWeight: "bold",
-                    opacity: deletingId === b.id ? 0.6 : 1,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {deletingId === b.id ? "Deleting..." : "Delete"}
-                </button>
+              <div className="blog-card-content">
+                <h3 className="blog-card-title">{b.title}</h3>
+                <p className="blog-card-author">By {b.author_name || "Unknown"}</p>
+                <p className="blog-card-excerpt">{b.content}</p>
+                
+                {isAuthor && (
+                  <div className="blog-card-actions">
+                    <button
+                      className="btn-small btn-edit"
+                      onClick={(e) => handleEditClick(b.id, e)}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      className="btn-small btn-delete"
+                      onClick={(e) => handleDelete(b.id, e)}
+                      disabled={deletingId === b.id}
+                    >
+                      {deletingId === b.id ? "🗑️ Deleting..." : "🗑️ Delete"}
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        );
-      })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
